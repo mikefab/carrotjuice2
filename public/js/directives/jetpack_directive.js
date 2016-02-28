@@ -1,4 +1,29 @@
 app.directive('jetpack', function($http) {
+  // Code that will add a TopoJSON function to Leaflet
+  L.TopoJSON = L.GeoJSON.extend({
+    addData: function(jsonData) {
+      if (jsonData.type === "Topology") {
+        for (key in jsonData.objects) {
+          geojson = topojson.feature(jsonData, jsonData.objects[key]);
+          L.GeoJSON.prototype.addData.call(this, geojson);
+        }
+      }
+      else {
+        L.GeoJSON.prototype.addData.call(this, jsonData);
+      }
+    }
+  });
+
+  function timeit(name, f) {
+    return function() {
+      var start = new Date();
+      var return_value = f.apply(this, arguments);
+      var elapsed_seconds = (new Date() - start) / 1000.0;
+      console.log("Time for " + name + " : " + elapsed_seconds);
+      return return_value;
+    }
+  }
+
   return {
     restrict: 'E',  // Restrict to element matches only.
     templateUrl: 'map_partial.html',
@@ -29,8 +54,6 @@ app.directive('jetpack', function($http) {
       // How many things are loading. If > 0, view will display a spinner.
       scope.num_loading = 0;
       scope.error_message = null;
-
-      draw();
 
       fetch_admin_polygons_and_populations(country_code)
         .then(function() {
@@ -88,7 +111,7 @@ app.directive('jetpack', function($http) {
         // instead?
         // TODO(jetpack): what's proper way to handle errors?
         // TODO(jetpack): factor these two...
-        var polys = $http.get('/api/admin_polygons/' + country_code)
+        var polys = $http.get('/api/admin_polygons_topojson/' + country_code)
             .then(function(response) {
               console.log('Fetching admin polygons complete:', response.status);
               if (response.data.length === 0) {
@@ -97,10 +120,12 @@ app.directive('jetpack', function($http) {
                 scope.error_message = err;
               } else {
                 admin_polygons = response.data;
-                admin_name_to_index = admin_polygons.features.reduce(
-                  function(h, feature, index) {
-                    h[feature.id] = index;
-                    return h;
+                var admin_objects = admin_polygons.objects.admin_polygons_br_0;
+
+                admin_name_to_index = {};
+                admin_objects.geometries.map(
+                  function(feature, index) {
+                    admin_name_to_index[feature.id] = index;
                   });
               }
             })
@@ -135,7 +160,7 @@ app.directive('jetpack', function($http) {
 
       /** Draw the map.
        */
-      function draw() {
+      var draw = timeit('draw', function() {
         console.log('Drawing.');
 
         L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
@@ -150,31 +175,29 @@ app.directive('jetpack', function($http) {
         // - copy over timeit/stopwatch stuff from resources for lightweight
         //   timing.
         if (admin_polygons) {
-          ++scope.num_loading;
-          console.log('Adding admin polygons..');
-          var geojsons = admin_polygons.features
-          // .filter(function(x, i) { return i % 2 === 0; })
-              .map(function(f) {
-                f.properties.scaled_population =
-                  log_rescale(admin_populations[admin_name_to_index[f.id]],
-                              admin_population_stats.min,
-                              admin_population_stats.max);
-                return L.geoJson(f, {
-                  style: {
-                    stroke: false,  // No borders.
-                    fillOpacity: f.properties.scaled_population
-                  },
-                  onEachFeature: onEachFeature
-                });
-              });
-          console.log('Converted to geojson..');
-          var layerGroup = L.layerGroup(geojsons);
-          console.log('Added to layerGroup..');
-          layerGroup.addTo(map);
-          --scope.num_loading;
+          var topoLayer = new L.TopoJSON();
+          topoLayer.addData(admin_polygons);
+
+          topoLayer.eachLayer(function(layer) {
+            var f = layer.feature;
+            f.properties.scaled_population =
+              log_rescale(admin_populations[admin_name_to_index[f.id]],
+                admin_population_stats.min,
+                admin_population_stats.max);
+            layer.setStyle({
+              stroke: false,
+              fillOpacity: f.properties.scaled_population
+            });
+
+            if (f.properties && f.properties.admin_2_name) {
+              layer.bindPopup(f.properties.admin_2_name);
+            }
+          });
+
+          topoLayer.addTo(map);
           console.log('Added to map!');
         }
-      }
+      });
 
       console.log('..link bottom');
     }

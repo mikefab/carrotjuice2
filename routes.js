@@ -35,6 +35,7 @@ module.exports = function(app, passport) {
 
   // Get polygons for admin regions.
   app.get('/api/admin_polygons/:country_code', apicache('1 day'), forward_route);
+  app.get('/api/admin_polygons_topojson/:country_code', apicache('1 day'), forward_route);
 
   // Get population for all admin regions.
   app.get('/api/admin_populations/:country_code', apicache('1 day'), forward_route);
