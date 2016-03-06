@@ -40,6 +40,9 @@ function setup_routes(app, passport) {
     });
   };
 
+  // Get topojson for country
+  app.get('/api/admin_polygons_topojson/:country_code', apicache('1 day'), forward_route);
+
   // Get regions (including polygons) from backend.
   app.get('/api/regions/:country_code', apicache('1 day'), forward_route);
 
@@ -118,7 +121,7 @@ function isLoggedIn(req, res, next) {
   var is_whitelisted = function() {
     whitelist.some(function(e) {
       return e === req.user.google.email || e === req.user.local.email;
-    })
+    });
   };
   if (process.env.NODE_ENV === 'development' ||
       (req.isAuthenticated() && is_whitelisted())) {

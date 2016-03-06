@@ -39,7 +39,7 @@ var APIClient = P({
     // webpack-based approach.
     //
     // return makeRequest("/api/regions/" + this.country_code);
-    return makeRequest("/admin_polygons_" + this.country_code + ".topo.json");
+    return makeRequest("/api/admin_polygons_topojson/" + this.country_code);
   }
 });
 
