@@ -66,6 +66,7 @@ var selected_regions = new SelectedRegions(function() {
 var region_details = new RegionDetails({
   on_update: rerender,
   api_client: api_client,
+  epi_data_store: epi_data_store,
   weather_data_store: weather_data_store
 });
 var map_coloring = new MapColoring({
@@ -94,6 +95,7 @@ var AppMain = React.createClass({
                             weather_data_store={weather_data_store} />
         ])}
         <OverlayControlsBox data_layer={data_layer}
+                            selected_date={selected_date}
                             selected_regions={selected_regions}
                             region_details={region_details} />
         <LoadingStatusView model={loading_status} />
