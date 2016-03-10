@@ -65,8 +65,9 @@ var MapController = P({
   on_each_feature: function(feature, layer) {
     var map = this.map;
     var selected_regions = this.selected_regions;
-    var region_code = feature.properties.region_code;
-
+    // TODO(jetpack): these region codes are actually numbers, ahhh!!
+    // https://github.com/mikefab/majicbox/issues/14
+    var region_code = feature.properties.region_code + '';
     var region_popup = L.popup({
       autoPan: false,
       closeButton: false,
