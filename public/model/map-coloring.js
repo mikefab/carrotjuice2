@@ -17,7 +17,8 @@ var MapColoring = P({
       oviposition: init_dict.weather_data_store.fake_oviposition_model()
     };
     this.epi_data_store = init_dict.epi_data_store;
-    this.load_promise = Q.all([init_dict.weather_data_store.initial_load_promise]);
+    this.load_promise = Q.all([init_dict.weather_data_store.initial_load_promise,
+                               this.epi_data_store.initial_load_promise]);
   },
 
   active_base_layer_data_store: function() {
