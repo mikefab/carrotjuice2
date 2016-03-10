@@ -9,7 +9,6 @@ var topojson = require('topojson');
 var RegionDetails = P({
   init: function(init_dict) {
     this.on_update = init_dict.on_update;
-    this.selected_regions = init_dict.selected_regions;
     this.weather_data_store = init_dict.weather_data_store;
     // TODO(jetpack): maybe this should be a separate class, like weather_data_store.
     // `region_data_by_code` is a map from region code to region data. Region
@@ -45,13 +44,6 @@ var RegionDetails = P({
 
   get_region_properties: function(region_code) {
     return this.region_data_by_code[region_code];
-  },
-
-  get_selected_regions_data: function() {
-    var region_data_by_code = this.region_data_by_code;
-    return this.selected_regions.get_region_codes().map(function(region_code) {
-      return region_data_by_code[region_code];
-    });
   }
 
 });

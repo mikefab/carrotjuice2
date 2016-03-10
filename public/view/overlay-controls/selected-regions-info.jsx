@@ -11,10 +11,14 @@ var SelectedRegionsInfo = React.createClass({
   },
 
   render: function() {
-    var selected_regions_data = this.props.region_details.get_selected_regions_data();
-    if (selected_regions_data.length) {
+    var selected_region_codes = this.props.selected_regions.get_region_codes();
+    var selected_regions_props = selected_region_codes.map((function(region_code) {
+      return this.props.region_details.get_region_properties(region_code);
+    }).bind(this));
+
+    if (selected_regions_props.length) {
       return <div className="selected-regions-info">
-        {selected_regions_data.map(this.create_region_panel)}
+        {selected_regions_props.map(this.create_region_panel)}
       </div>;
     } else {
       return <div className="selected-regions-info">
