@@ -26,9 +26,8 @@ var SelectedAdminsInfo = React.createClass({
     return <div className="selected-admin-info" key={admin.name}>
       <h3>{admin.name}</h3>
       <div>Area: {admin.geo_area_sqkm} km²</div>
-      <div>Population: {this.commify(admin.population)}</div>
-      <br/>
       <div>Case data: {this.create_case_data(admin)}</div>
+      <div>Population: {this.commify(admin.population)}</div>
     </div>;
   },
 
