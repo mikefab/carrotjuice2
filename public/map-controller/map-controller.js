@@ -43,11 +43,14 @@ var obj_to_alist = function(obj) {
 };
 
 var MapController = P({
-  init: function(init_dict) {
-    this.loading_status = init_dict.loading_status;
-    this.admin_details = init_dict.admin_details;
-    this.selected_admins = init_dict.selected_admins;
-    this.map_coloring = init_dict.map_coloring;
+  init: function(loading_status,
+                 admin_details,
+                 selected_admins,
+                 map_coloring) {
+    this.loading_status = loading_status;
+    this.admin_details = admin_details;
+    this.selected_admins = selected_admins;
+    this.map_coloring = map_coloring;
     // `admins_layers_by_country` is a map from country code to array of Leaflet GeoJSON layers.
     this.admins_layers_by_country = {};
     this.overlay_layers = [];

@@ -9,24 +9,33 @@ var P = require('pjs').P;
 var Q = require('q');
 
 var MapColoring = P({
-  init: function(init_dict) {
-    this.data_layer = init_dict.data_layer;
-    this.selected_admins = init_dict.selected_admins;
-    this.selected_countries = init_dict.selected_countries;
-    this.selected_date = init_dict.selected_date;
+  init: function(data_layer,
+                 selected_admins,
+                 selected_date,
+                 selected_countries,
+                 admin_details,
+                 weather_data_store,
+                 econ_data_store,
+                 epi_data_store,
+                 mobility_data_store) {
+    this.data_layer = data_layer;
+    this.selected_admins = selected_admins;
+    this.selected_countries = selected_countries;
+    this.selected_date = selected_date;
     this.data_stores_for_base_layer = {
-      weather: init_dict.weather_data_store,
-      oviposition: init_dict.weather_data_store.fake_oviposition_model(),
-      population_density: init_dict.admin_details,
-      socioeconomic: init_dict.econ_data_store
+      weather: weather_data_store,
+      oviposition: weather_data_store.fake_oviposition_model(),
+      population_density: admin_details,
+      socioeconomic: econ_data_store
     };
-    this.epi_data_store = init_dict.epi_data_store;
-    this.mobility_data_store = init_dict.mobility_data_store;
-    this.initial_load_promise = Q.all([init_dict.weather_data_store.initial_load_promise,
-                                       init_dict.admin_details.initial_load_promise,
-                                       init_dict.econ_data_store.initial_load_promise,
-                                       this.epi_data_store.initial_load_promise,
-                                       this.mobility_data_store.initial_load_promise]);
+    this.epi_data_store = epi_data_store;
+    this.mobility_data_store = mobility_data_store;
+    this.initial_load_promise = Q.all([
+      weather_data_store.initial_load_promise,
+      admin_details.initial_load_promise,
+      econ_data_store.initial_load_promise,
+      epi_data_store.initial_load_promise,
+      mobility_data_store.initial_load_promise]);
   },
 
   active_base_layer_data_store: function() {

@@ -4,6 +4,7 @@
 
 var _ = require('lodash');
 var P = require('pjs').P;
+var Q = require('q');
 var d3 = require('d3');
 
 var FakeOvipositionDataStore = P({
@@ -36,7 +37,7 @@ var WeatherDataStore = P({
     this.last_date = null;
     // TODO(jetpack): globalhack: `last_date` should be per-country.
     this.last_date = null;
-    this.initial_load_promise = Promise.all(
+    this.initial_load_promise = Q.all(
       initial_countries_to_load.map((function(country_code) {
         return this.fetch_country_data(country_code, null);
       }).bind(this)))
@@ -82,6 +83,9 @@ var WeatherDataStore = P({
     return _.mapValues(
       this.data_by_date_and_admin[date_string],
       function(data_obj) {
+        if (data_obj.temp_mean < 1 || data_obj.temp_mean > 50) {
+          console.warn("Weather data store: temperature is outside of expected range.");
+        }
         return temp_to_prevalence(data_obj.temp_mean);
       }
     );
@@ -92,17 +96,17 @@ var WeatherDataStore = P({
   },
 
   on_admin_select: function(admin_codes) {
-    return Promise.all(admin_codes.map((function(admin_code) {
+    return Q.all(admin_codes.map((function(admin_code) {
       return this.fetch_admin_data(admin_code);
     }).bind(this)))
-      .then(this.on_update.bind(this));
+      .then(this.on_update);
   },
 
   on_date_select: function(country_codes, date) {
-    return Promise.all(country_codes.map((function(country_code) {
+    return Q.all(country_codes.map((function(country_code) {
       return this.fetch_country_data(country_code, date);
     }).bind(this)))
-      .then(this.on_update.bind(this));
+      .then(this.on_update);
   },
 
   on_country_select: function(country_codes, date) {
