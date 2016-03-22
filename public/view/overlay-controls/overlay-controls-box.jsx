@@ -24,6 +24,8 @@ var OverlayControlsBox = React.createClass({
           data_layer={this.props.data_layer}
         />
       </div>
+      <br/>
+      <br/>
       <div className="overlay-controls-section">
         <AdminSearch
           admin_details={this.props.admin_details}
