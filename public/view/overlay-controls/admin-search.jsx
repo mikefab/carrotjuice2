@@ -1,6 +1,6 @@
 var React = require('react');
 var Typeahead = require('react-typeahead').Typeahead;
-require('./admin-search.css');
+
 
 var AdminSearch = React.createClass({
   admins: function() {
