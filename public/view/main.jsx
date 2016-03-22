@@ -18,6 +18,7 @@ var EconDataStore = require('../model/econ-data-store.js');
 var MobilityDataStore = require('../model/mobility-data-store.js');
 var WeatherDataStore = require('../model/weather-data-store.js');
 var SelectedCountries = require('../model/selected-countries.js');
+var SearchedAdmins = require('../model/searched-admins.js');
 var SelectedAdmins = require('../model/selected-admins.js');
 var SelectedDate = require('../model/selected-date.js');
 var AdminDetails = require('../model/admin-details.js');
@@ -80,9 +81,14 @@ var selected_admins = new SelectedAdmins(function() {
   // TODO(jetpack): we'll want a similar thing for epi_data_store, I think?
   weather_data_store.on_admin_select(selected_admins.get_admin_codes());
 });
+var searched_admins = new SearchedAdmins(function() {
+  rerender();
+});
+
 var admin_details = new AdminDetails({
   on_update: rerender,
   api_client: api_client,
+  searched_admins: searched_admins,
   selected_admins: selected_admins,
   econ_data_store: econ_data_store,
   epi_data_store: epi_data_store,
@@ -91,6 +97,7 @@ var admin_details = new AdminDetails({
 });
 var map_coloring = new MapColoring({
   data_layer: data_layer,
+  searched_admins: searched_admins,
   selected_admins: selected_admins,
   selected_date: selected_date,
   selected_countries: selected_countries,
@@ -102,6 +109,7 @@ var map_coloring = new MapColoring({
 map_controller = new MapController({
   loading_status: loading_status,
   admin_details: admin_details,
+  searched_admins: searched_admins,
   selected_admins: selected_admins,
   map_coloring: map_coloring
 });

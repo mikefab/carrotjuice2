@@ -46,6 +46,7 @@ var MapController = P({
   init: function(init_dict) {
     this.loading_status = init_dict.loading_status;
     this.admin_details = init_dict.admin_details;
+    this.searched_admins = init_dict.searched_admins;
     this.selected_admins = init_dict.selected_admins;
     this.map_coloring = init_dict.map_coloring;
     // `admins_layers_by_country` is a map from country code to array of Leaflet GeoJSON layers.
@@ -88,6 +89,7 @@ var MapController = P({
 
   on_each_feature: function(feature, layer) {
     var map = this.map;
+    var searched_admins = this.searched_admins;
     var selected_admins = this.selected_admins;
     var admin_code = feature.properties.admin_code;
     var admin_popup = L.popup(this.popup_options, layer);
@@ -135,15 +137,24 @@ var MapController = P({
     var admin_to_color = function(admin_code) {
       return admin_to_color_obj[admin_code] || '#ccc';
     };
+    var border_strength = function(admin_code, searched_admin_code, zoom) {
+      if(admin_code === searched_admin_code) { return 1.0 }
+      return zoom <= 5 ? 0.05 : 0.3;
+    };
+
+
     return (function(feature) {
       var admin_code = feature.properties.admin_code;
+      var searched_admin_code = Object.keys(
+        this.searched_admins.searched_admin_codes
+      )[0];
       return {
         fillColor: admin_to_color(admin_code),
         fillOpacity: this.map_coloring.base_layer_opacity(),
         color: '#000',  // Border color.
         // Use lighter borders when zoomed out. Otherwise, the map looks very noisy in areas with
         // lots of little admins.
-        opacity: this.map.getZoom() <= 5 ? 0.05 : 0.3,
+        opacity: border_strength(admin_code, searched_admin_code, this.map.getZoom()),
         weight: this.selected_admins.get_border_weight(admin_code)
       };
     }).bind(this);
