@@ -108,7 +108,6 @@ var admin_details = new AdminDetails({
   initial_countries_to_load: SUPPORTED_COUNTRIES
 });
 var map_coloring = new MapColoring({
-  data_layer: data_layer,
   searched_admins: searched_admins,
   selected_layers: selected_layers,
   selected_admins: selected_admins,
