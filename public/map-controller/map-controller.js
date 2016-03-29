@@ -132,6 +132,27 @@ var MapController = P({
     });
   },
 
+  /**
+   * Refocus map to searched admin.
+   *
+   * @param{string} searched_admin_code - 3166-1 alpha-2 country code.
+   * @param{object} feature - geofeature
+   */
+  refocus_map: function(searched_admin_code, feature) {
+    var lat;
+    var lon;
+    if (searched_admin_code === feature.properties.admin_code) {
+      if (feature.geometry.type.match(/MultiPolygon/)) {
+        lon = feature.geometry.coordinates[0][0][0][0];
+        lat = feature.geometry.coordinates[0][0][0][1];
+      } else {
+        lon = feature.geometry.coordinates[0][0][0];
+        lat = feature.geometry.coordinates[0][0][1];
+      }
+      this.map.setView(new L.LatLng(lat, lon), 8);
+    }
+  },
+
   get_admin_style_fcn: function() {
     var admin_to_color_obj = this.map_coloring.active_base_layer_coloring_data();
     // When there's no base layer data, color all regions gray.
@@ -148,13 +169,9 @@ var MapController = P({
 
     return (function(feature) {
       var admin_code = feature.properties.admin_code;
-
-      if(searched_admin_code){
-        if(searched_admin_code === feature.properties.admin_code){
-          var lon = feature.geometry.coordinates[0][0][0];
-          var lat = feature.geometry.coordinates[0][0][1];
-          this.map.setView(new L.LatLng(lat, lon), 8);
-        }
+      if (searched_admin_code) {
+        // Center map on admin
+        this.refocus_map(searched_admin_code, feature);
       }
       return {
         fillColor: admin_to_color(admin_code),
