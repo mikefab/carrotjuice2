@@ -1,6 +1,6 @@
 var React = require('react');
 var Typeahead = require('react-typeahead').Typeahead;
-
+require('./admin-search.css');
 
 var AdminSearch = React.createClass({
   admins: function() {
@@ -20,7 +20,8 @@ var AdminSearch = React.createClass({
       });
     // Return array of admin names
     }).map(function(key) {
-      return admin_objs[key].name;// + ' ' + admin_objs[key].admin_code.split('-')[0]
+      return admin_objs[key].name + ' ' +
+      admin_objs[key].admin_code;
     }).sort();
     return admins;
   },
@@ -30,7 +31,7 @@ var AdminSearch = React.createClass({
     var admin_objs = this.props.admin_details.admin_data_by_code;
     var admin_code = Object.keys(this.props.admin_details.admin_data_by_code)
     .find(function(key) {
-      return admin_objs[key].name === argument;
+      return admin_objs[key].name + ' ' + admin_objs[key].admin_code === argument;
     });
     // Select searched admin
     this.props.admin_details.selected_admins.select_admin(admin_code);
@@ -38,11 +39,11 @@ var AdminSearch = React.createClass({
   },
 
   render: function() {
-    return <div className="admin-search">
+    return <div className="admin-search" id="scrollable-dropdown-menu">
       Search: <Typeahead
     options={this.admins()}
     onOptionSelected={this.optionSelected}
-    maxVisible={10}
+    maxVisible={100}
   />
     </div>;
   }
