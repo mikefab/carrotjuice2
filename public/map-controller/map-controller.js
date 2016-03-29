@@ -56,6 +56,7 @@ var MapController = P({
     // which can be very terrible. instead, we should compute the centroid in
     // the backend: https://github.com/mikefab/majicbox/issues/6
     this.admin_code_to_latlng = {};
+    this.coords = init_dict.focus;
   },
 
   /**
@@ -66,7 +67,7 @@ var MapController = P({
       alert('INTERNAL ERROR: MapController getting initialized twice.');
     }
     this.map_element = map_element;
-    this.map = draw_initial_map(map_element);
+    this.map = draw_initial_map(map_element, this.coords);
     window._leaflet_map = this.map;  // save a reference for easier debugging
     // TODO(jetpack): We redraw on zoom because we only want to admin borders when zoomed in past a
     // certain level. This should only require `setStyle` on all admin layers, not a full `redraw`.
@@ -141,13 +142,20 @@ var MapController = P({
       if(admin_code === searched_admin_code) { return 1.0 }
       return zoom <= 5 ? 0.05 : 0.3;
     };
-
+    var searched_admin_code = Object.keys(
+      this.searched_admins.searched_admin_codes
+    )[0];
 
     return (function(feature) {
       var admin_code = feature.properties.admin_code;
-      var searched_admin_code = Object.keys(
-        this.searched_admins.searched_admin_codes
-      )[0];
+
+      if(searched_admin_code){
+        if(searched_admin_code === feature.properties.admin_code){
+          var lon = feature.geometry.coordinates[0][0][0];
+          var lat = feature.geometry.coordinates[0][0][1];
+          this.map.setView(new L.LatLng(lat, lon), 8);
+        }
+      }
       return {
         fillColor: admin_to_color(admin_code),
         fillOpacity: this.map_coloring.base_layer_opacity(),

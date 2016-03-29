@@ -123,7 +123,8 @@ map_controller = new MapController({
   admin_details: admin_details,
   searched_admins: searched_admins,
   selected_admins: selected_admins,
-  map_coloring: map_coloring
+  map_coloring: map_coloring,
+  focus: [-23.3, -46.3]   // São Paulo.
 });
 
 var AppMain = React.createClass({
