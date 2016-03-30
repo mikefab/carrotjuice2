@@ -10,19 +10,8 @@ var SearchedAdmins = P({
     // `searched_admin_codes` is a map from admin code to callbacks. The
     // callbacks are called when the admin is unsearched.
     this.searched_admin_codes = {};
-    this.hovered_admin_code = null;
-  },
-
-  // Note: `on_unsearch` is only used when `admin_code` is toggled on.
-  toggle_admin: function(admin_code, on_unselect) {
-    if (this.is_admin_searched(admin_code)) {
-      var cb = this.searched_admin_codes[admin_code];
-      delete this.searched_admin_codes[admin_code];
-      cb();
-    } else {
-      this.searched_admin_codes[admin_code] = on_unsearch || _.noop;
-    }
-    this.onUpdate();
+    // Temp hack to avoid double refocus on search select
+    this.fresh = false;
   },
 
   search_admin: function(admin_code, on_unsearch) {

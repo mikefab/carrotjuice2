@@ -71,6 +71,7 @@ var MapController = P({
     window._leaflet_map = this.map;  // save a reference for easier debugging
     // TODO(jetpack): We redraw on zoom because we only want to admin borders when zoomed in past a
     // certain level. This should only require `setStyle` on all admin layers, not a full `redraw`.
+
     this.map.on('zoomend', this.redraw.bind(this));
     Q.all([this.map_coloring.initial_load_promise,
            this.admin_details.initial_load_promise])
@@ -120,6 +121,8 @@ var MapController = P({
       set_border(e);
     };
     var click = function(e) {
+      // User has clicked an admin. Clear admin searched object.
+      searched_admins.searched_admin_codes = {}
       selected_admins.select_admin(admin_code, set_border.bind(null, e));
       set_border(e);
       layer.bringToFront();  // Ensures border is fully visible.
@@ -149,11 +152,20 @@ var MapController = P({
         lon = feature.geometry.coordinates[0][0][0];
         lat = feature.geometry.coordinates[0][0][1];
       }
-      this.map.setView(new L.LatLng(lat, lon), 8);
+      var thing = this;
+
+      thing.map.setView(new L.LatLng(lat, lon), 7);
+      // Hack so that refocus doesn't reoccur on redraw.
+      this.searched_admins.fresh = false;
     }
   },
 
   get_admin_style_fcn: function() {
+
+    var searched_admin_code = Object.keys(
+      this.searched_admins.searched_admin_codes
+    )[0];
+
     var admin_to_color_obj = this.map_coloring.active_base_layer_coloring_data();
     // When there's no base layer data, color all regions gray.
     var admin_to_color = function(admin_code) {
@@ -163,16 +175,16 @@ var MapController = P({
       if(admin_code === searched_admin_code) { return 1.0 }
       return zoom <= 5 ? 0.05 : 0.3;
     };
-    var searched_admin_code = Object.keys(
-      this.searched_admins.searched_admin_codes
-    )[0];
 
     return (function(feature) {
       var admin_code = feature.properties.admin_code;
       if (searched_admin_code) {
         // Center map on admin
-        this.refocus_map(searched_admin_code, feature);
+        if (this.searched_admins.fresh) {
+          this.refocus_map(searched_admin_code, feature);
+        }
       }
+
       return {
         fillColor: admin_to_color(admin_code),
         fillOpacity: this.map_coloring.base_layer_opacity(),
@@ -182,6 +194,7 @@ var MapController = P({
         opacity: border_strength(admin_code, searched_admin_code, this.map.getZoom()),
         weight: this.selected_admins.get_border_weight(admin_code)
       };
+
     }).bind(this);
   },
 
