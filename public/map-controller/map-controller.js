@@ -46,6 +46,7 @@ var MapController = P({
   init: function(init_dict) {
     this.loading_status = init_dict.loading_status;
     this.admin_details = init_dict.admin_details;
+    this.searched_admins = init_dict.searched_admins;
     this.selected_admins = init_dict.selected_admins;
     this.map_coloring = init_dict.map_coloring;
     // `admins_layers_by_country` is a map from country code to array of Leaflet GeoJSON layers.
@@ -55,6 +56,7 @@ var MapController = P({
     // which can be very terrible. instead, we should compute the centroid in
     // the backend: https://github.com/mikefab/majicbox/issues/6
     this.admin_code_to_latlng = {};
+    this.coords = init_dict.focus;
   },
 
   /**
@@ -65,10 +67,11 @@ var MapController = P({
       console.error('INTERNAL ERROR: MapController getting initialized twice.');
     }
     this.map_element = map_element;
-    this.map = draw_initial_map(map_element);
+    this.map = draw_initial_map(map_element, this.coords);
     window._leaflet_map = this.map;  // save a reference for easier debugging
     // TODO(jetpack): We redraw on zoom because we only want to admin borders when zoomed in past a
     // certain level. This should only require `setStyle` on all admin layers, not a full `redraw`.
+
     this.map.on('zoomend', this.redraw.bind(this));
     Q.all([this.map_coloring.initial_load_promise,
            this.admin_details.initial_load_promise])
@@ -88,6 +91,7 @@ var MapController = P({
 
   on_each_feature: function(feature, layer) {
     var map = this.map;
+    var searched_admins = this.searched_admins;
     var selected_admins = this.selected_admins;
     var admin_code = feature.properties.admin_code;
     var admin_popup = L.popup(this.popup_options, layer);
@@ -117,6 +121,8 @@ var MapController = P({
       set_border(e);
     };
     var click = function(e) {
+      // User has clicked an admin. Clear admin searched object.
+      searched_admins.searched_admin_codes = {}
       selected_admins.select_admin(admin_code, set_border.bind(null, e));
       set_border(e);
       layer.bringToFront();  // Ensures border is fully visible.
@@ -129,23 +135,66 @@ var MapController = P({
     });
   },
 
+  /**
+   * Refocus map to searched admin.
+   *
+   * @param{string} searched_admin_code - 3166-1 alpha-2 country code.
+   * @param{object} feature - geofeature
+   */
+  refocus_map: function(searched_admin_code, feature) {
+    var lat;
+    var lon;
+    if (searched_admin_code === feature.properties.admin_code) {
+      if (feature.geometry.type.match(/MultiPolygon/)) {
+        lon = feature.geometry.coordinates[0][0][0][0];
+        lat = feature.geometry.coordinates[0][0][0][1];
+      } else {
+        lon = feature.geometry.coordinates[0][0][0];
+        lat = feature.geometry.coordinates[0][0][1];
+      }
+      var thing = this;
+
+      thing.map.setView(new L.LatLng(lat, lon), 7);
+      // Hack so that refocus doesn't reoccur on redraw.
+      this.searched_admins.fresh = false;
+    }
+  },
+
   get_admin_style_fcn: function() {
+
+    var searched_admin_code = Object.keys(
+      this.searched_admins.searched_admin_codes
+    )[0];
+
     var admin_to_color_obj = this.map_coloring.active_base_layer_coloring_data();
     // When there's no base layer data, color all regions gray.
     var admin_to_color = function(admin_code) {
       return admin_to_color_obj[admin_code] || '#ccc';
     };
+    var border_strength = function(admin_code, searched_admin_code, zoom) {
+      if(admin_code === searched_admin_code) { return 1.0 }
+      return zoom <= 5 ? 0.05 : 0.3;
+    };
+
     return (function(feature) {
       var admin_code = feature.properties.admin_code;
+      if (searched_admin_code) {
+        // Center map on admin
+        if (this.searched_admins.fresh) {
+          this.refocus_map(searched_admin_code, feature);
+        }
+      }
+
       return {
         fillColor: admin_to_color(admin_code),
         fillOpacity: this.map_coloring.base_layer_opacity(),
         color: '#000',  // Border color.
         // Use lighter borders when zoomed out. Otherwise, the map looks very noisy in areas with
         // lots of little admins.
-        opacity: this.map.getZoom() <= 5 ? 0.05 : 0.3,
+        opacity: border_strength(admin_code, searched_admin_code, this.map.getZoom()),
         weight: this.selected_admins.get_border_weight(admin_code)
       };
+
     }).bind(this);
   },
 

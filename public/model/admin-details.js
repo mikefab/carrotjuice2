@@ -69,6 +69,7 @@ var SocioeconomicModel = P({
 var AdminDetails = P({
   init: function(init_dict) {
     this.on_update = init_dict.on_update;
+    this.searched_admins = init_dict.searched_admins;
     this.selected_admins = init_dict.selected_admins;
     this.econ_data_store = init_dict.econ_data_store;
     this.epi_data_store = init_dict.epi_data_store;
