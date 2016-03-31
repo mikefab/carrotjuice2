@@ -65,7 +65,11 @@ var weather_data_store = new WeatherDataStore(rerender_and_redraw, api_client, S
 var selected_layers = new SelectedLayers(rerender_and_redraw);
 var selected_countries = new SelectedCountries(selection_ee, SUPPORTED_COUNTRIES);
 var selected_date = new SelectedDate(selection_ee, weather_data_store);
-var selected_admins = new SelectedAdmins(selection_ee);
+// var selected_admins = new SelectedAdmins(selection_ee);
+
+var selected_admins = new SelectedAdmins(selection_ee, function() {
+  rerender();
+});
 
 // Upon selection, we may want to fetch more data from the server. This code is a
 // little out-of-band, because when one dimension is changed/selectied (e.g. admin
@@ -115,7 +119,8 @@ map_controller = new MapController({
   loading_status: loading_status,
   admin_details: admin_details,
   selected_admins: selected_admins,
-  map_coloring: map_coloring
+  map_coloring: map_coloring,
+  focus: [-23.3, -46.3]   // São Paulo.
 });
 
 var AppMain = React.createClass({
