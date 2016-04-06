@@ -11,18 +11,31 @@ var SelectedAdminsInfo = React.createClass({
   },
 
   population_figure: function(x) {
-    if (!x) { return this.no_data; }
-    return this.commify(x);
+    return x ? this.commify(x) : this.no_data;
   },
 
   weather_data: function(admin_code) {
     var weather_data = this.props.admin_details.weather_data_store.weather_data_for_date_and_admin(
       this.props.selected_date.current_day, admin_code);
-    if (_.has(weather_data, 'temp_mean')) {
-      return <span>{weather_data.temp_mean.toFixed(1)} °C</span>;
-    } else {
-      return this.no_data;
-    }
+    return (_.has(weather_data, 'temp_mean')) ?
+           <span>{weather_data.temp_mean.toFixed(1)} °C</span> :
+           this.no_data;
+  },
+
+  oviposition_data: function(admin_code) {
+    var oviposition = this.props.admin_details.weather_data_store.oviposition_model
+                          .oviposition_factor_for_date_and_admin(
+                            this.props.selected_date.current_day, admin_code);
+    return oviposition ? <span>{oviposition}%</span> : this.no_data;
+  },
+
+  prevalence_data: function(admin_code) {
+    var prevalence = this.props.admin_details.weather_data_store.prevalence_model
+                         .prevalence_for_date_and_admin(
+                           this.props.selected_date.current_day, admin_code);
+    return (!_.isEmpty(prevalence)) ?
+           <span>{prevalence.description} ({this.commify(prevalence.value)})</span> :
+           this.no_data;
   },
 
   case_data: function(admin_code) {
@@ -44,6 +57,8 @@ var SelectedAdminsInfo = React.createClass({
       <div>Population: {this.population_figure(admin.population)}</div>
       <div>Area: {this.commify(admin.geo_area_sqkm)} km²</div>
       <div>Weather: {this.weather_data(admin.admin_code)}</div>
+      <div>Oviposition: {this.oviposition_data(admin.admin_code)}</div>
+      <div>Prevalence: {this.prevalence_data(admin.admin_code)}</div>
       <div>Case data: {this.case_data(admin.admin_code)}</div>
     </div>;
   },

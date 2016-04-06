@@ -5,25 +5,7 @@
 var _ = require('lodash');
 var P = require('pjs').P;
 var d3 = require('d3');
-
-var FakeOvipositionDataStore = P({
-  init: function(weather_data_store) {
-    this.weather_data_store = weather_data_store;
-  },
-
-  admin_color_for_date: function(date_string) {
-    // TODO(jetpack): Use real science and stuff.
-    var temp_to_oviposition = d3.scale.sqrt().domain([1, 50])
-      .range(['white', 'purple', 'red']);
-
-    return _.mapValues(
-      this.weather_data_store.data_by_date_and_admin[date_string],
-      function(data_obj) {
-        return temp_to_oviposition(data_obj.temp_mean);
-      }
-    );
-  }
-});
+var Science = require('./science.js');
 
 var WeatherDataStore = P({
   init: function(on_update, api_client, initial_countries_to_load) {
@@ -33,7 +15,8 @@ var WeatherDataStore = P({
     // weather data. Currently weather data just has a single field,
     // `temp_mean`.
     this.data_by_date_and_admin = {};
-    this.last_date = null;
+    this.oviposition_model = new Science.OvipositionModel(this);
+    this.prevalence_model = new Science.MosquitoPrevalenceModel(this);
     // TODO(jetpack): globalhack: `last_date` should be per-country.
     this.last_date = null;
     this.initial_load_promise = Promise.all(
@@ -80,19 +63,14 @@ var WeatherDataStore = P({
 
   admin_color_for_date: function(date_string) {
     // TODO(jetpack): Use real science and stuff.
-    var temp_to_prevalence = d3.scale.log().domain([1, 50])
+    var temp_to_color = d3.scale.linear().domain([15, 25, 35]).clamp(true)
       .range(['green', 'yellow', 'red']);
-
     return _.mapValues(
       this.data_by_date_and_admin[date_string],
       function(data_obj) {
-        return temp_to_prevalence(data_obj.temp_mean);
+        return temp_to_color(data_obj.temp_mean);
       }
     );
-  },
-
-  fake_oviposition_model: function() {
-    return new FakeOvipositionDataStore(this);
   },
 
   on_admin_select: function(admin_codes) {
