@@ -1,6 +1,6 @@
 .git/
+build/*bundle*
 node_modules/
-bower_components/
 itest-majicbox-server/
 config.js
 build/*bundle*
